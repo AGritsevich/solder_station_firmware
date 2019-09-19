@@ -1,0 +1,4 @@
+class SolderingHairdryer {
+    public:
+    private:
+};
