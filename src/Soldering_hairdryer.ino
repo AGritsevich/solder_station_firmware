@@ -1,4 +1,0 @@
-class SolderingHairdryer {
-    public:
-    private:
-};

@@ -1,4 +1,0 @@
-class SolderingIron {
-    public:
-    private:
-};
