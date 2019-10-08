@@ -32,7 +32,8 @@ class SolderingHairdryer {
         heating_state_ = false;
         setup_mode_ = false;
         setup_time_ = 0;
-        last_target_temp_ = 0;
+        first_heat_ = true;
+        last_target_temp_ = get_target_temp(); // load_eeprom()
     };
 
   private:
@@ -74,57 +75,50 @@ class SolderingHairdryer {
     };
 
   public:
-    void update() { // TODO 2 mode: change speed or temp, and current temp
+    void update() {
         if (state_ == true) { // enabled
-            uint32_t target_temp = get_target_temp();
-            uint32_t temp = temp();
-            int32_t delta_temp = target_temp - temp;
-            uint32_t speed = get_target_fan_speed();
+            uint16_t target_temp = laying_mode_ ? Configure:HAIRDRYER_SAVE_TEMP : get_target_temp();
+            uint16_t show_temp = temp();
+            int32_t delta_temp = target_temp - show_temp;
+            uint16_t speed = get_target_fan_speed();
 
-            if (!setup_mode_ && last_target_temp_ && last_target_temp_ != target_temp) {
-                setup_mode_ = true;
-                setup_time_ = millis();
+            if (!setup_mode_) {
+                if (last_target_temp_ != target_temp) {
+                    setup_mode_ = true;
+                    setup_time_ = millis();
+                    last_target_temp_ = target_temp;
+                } 
             } else {
-                last_target_temp_ = target_temp;
-            }
-            
-            if (setup_mode_) {
-                temp = target_temp;
-                if ((millis() - setup_time_) >= Configure::TIME_To_REACT_ms) {
-                    setup_mode_ = LOW;
-                    // setup_mode_ = (millis() - setup_time_) >= Configure::TIME_To_REACT_ms);
-                }
-                // blinking numbers mean: setup
+                setup_mode_ = (millis() - setup_time_) >= Configure::TIME_To_REACT_ms;
             }
 
-            // TODO correct work of laying mode on and off
-            if (is_lay()) { // enter only once
-                if (!laying_mode_) {
+            if (!laying_mode_) {
+                if (is_lay()) { // put on - keep power
                     set_fan_speed(Configure::FUN_5_percent);
                     laying_mode_ = true;
                 }
-            } else {
-                if (laying_mode_) {
-                    set_fan_speed(speed);
+            } else { // not lay
+                if (!is_lay()) {
                     laying_mode_ = false;
+                    set_fan_speed(target_speed);
                 }
             }
 
-            if (heating_state_ && delta_temp > 0) { // taget temp not reached: heating
-                // what to do?
+            if (heating_state_) { // heating ON
+                if (delta_temp > 0) { // taget temp not reached: heating
+                    beeper_.increase_beep(first_heat_);
+                } else { // target temp reached: stop heating
+                    heating_state_ = disable_heater();
+                    beeper_.temprature_reached(first_heat_);
+                    first_heat_ = false;
+                }
+            } else { // taget temp loose: cooling down
+                if (delta_temp >= Configure::TEMP_DELTA)  { 
+                    heating_state_ = enable_heater();
+                }
             }
 
-            if (heating_state_ && delta_temp <= 0) { // target temp reached: stop heating
-                disable_heater();
-                beeper_.temprature_reached(); // TODO beep only once per setup
-            }
-
-            if (!heating_state_ && delta_temp >= Configure::TEMP_DELTA)  { // taget temp loose: cooling down
-                enable_heater();
-            }
-
-            screen.update_hairdryer(setup_mode_, temp, speed);
-            // is setup mode, temp, speed
+            screen.update_hairdryer(setup_mode_, show_temp, speed);
         }
 
         if ( !hot_led_state_ && temp() >= Configure::HOT_TEMP) { 
@@ -139,14 +133,13 @@ class SolderingHairdryer {
 
     static void change_state() {
         state_ != state_;
-        if (state_ == false ) { // enable
+        if (state_ == true ) { // enable
            enable_heater(); // maybe there need speed turn on\turn off
            set_fan_speed(Configure::FUN_5_percent);
-        } else if (state == true ) { // disable
+           first_heat_ = true;
+        } else if (state == false ) { // disable
             disable_heater();
             set_fan_speed(Configure::FUN_100_percent);
-        } else {
-            // TODO FAIL alarm
         }
     };
 
@@ -156,6 +149,7 @@ class SolderingHairdryer {
     bool laying_mode_;
     bool heating_state_;
     bool setup_mode_;
+    bool first_heat_;
     uint64_t setup_time_;
     uint32_t last_target_temp_;
 

@@ -16,7 +16,7 @@ class Configure { // or enam
       beeper = 7, // beeper + leg
       hairdryer_heater_ctrl = 6,  // switcher of heater
       solder_ctrl = 5,  // switcher of heater
-      hairdryer_btn = 4,  // switch of\off of hairdryer TODO HW move to 3 Digital Pin
+      hairdryer_btn = 4,  // switch on\off of hairdryer TODO HW move to 3 Digital Pin
       hairdryer_motor = 3,  // switcher of motor cooler TODO HW move to 4 Digital Pin
       solder_btn = 2,  // switch on\off of solder stick
       hot_solder_stick_led = 1,
@@ -39,6 +39,6 @@ class Configure { // or enam
     const static uint8_t FUN_80_percent = 204;
     const static uint8_t FUN_90_percent = 230;
     const static uint8_t FUN_100_percent = 255;
-
+    const static uint8_t HAIRDRYER_SAVE_TEMP = 150;
     const static uint64_t TIME_To_REACT_ms = 10000u;
 };

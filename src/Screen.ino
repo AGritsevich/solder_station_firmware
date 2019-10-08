@@ -14,6 +14,9 @@ class Screen {
         lcd.clear();
     };
 
+    void update_solder_stick(setup_mode_, temp);
+    screen.update_hairdryer(setup_mode_, temp, speed);
+
     void show_hello() {
         lcd.clear();
         lcd.setCursor(0, 0);
