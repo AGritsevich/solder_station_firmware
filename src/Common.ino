@@ -1,1 +1,0 @@
-void(* reset_mk) (void) = 0;//declare reset function at address 0

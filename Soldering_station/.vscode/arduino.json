@@ -1,0 +1,6 @@
+{
+    "programmer": "USBasp",
+    "board": "arduino:avr:uno",
+    "port": "COM1",
+    "sketch": "Soldering_station.ino"
+}
